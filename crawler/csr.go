@@ -19,7 +19,7 @@ func (c *csrCrawler) Crawl() error {
 
 	err := chromedp.Run(c.ctx,
 		chromedp.Navigate(c.url),
-		chromedp.Evaluate(`document.documentElement.innerHTML;`, &content),
+		chromedp.Evaluate(`document.documentElement.outerHTML;`, &content),
 	)
 
 	if err != nil {

@@ -27,7 +27,7 @@ func (c *ssrCrawler) Crawl() error {
 
 	var content string
 	err = chromedp.Run(c.ctx,
-		chromedp.InnerHTML("body", &content, chromedp.ByQuery),
+		chromedp.InnerHTML("html", &content, chromedp.ByQuery),
 	)
 
 	if err != nil {
