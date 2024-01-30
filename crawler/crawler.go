@@ -2,52 +2,51 @@ package crawler
 
 import (
 	"context"
-	"fmt"
-	"time"
-
-	"github.com/chromedp/chromedp"
 )
 
 type Crawler interface {
 	Crawl() error
 }
 
-func isCSR(url string, timeout ...time.Duration) bool {
-	duration := 30 * time.Second
-	if len(timeout) > 0 {
-		duration = timeout[0]
-	}
+type CrawlerImpl func(ctx context.Context, url string) Crawler
 
-	ctx, _ := context.WithTimeout(context.Background(), duration)
-	ctx, cancel := chromedp.NewContext(ctx)
-	defer cancel()
+var instances = make(map[string]CrawlerImpl)
 
-	for {
-		select {
-		case <-ctx.Done():
-			fmt.Println("> CSR website detected. Crawling with CSR strategy")
-			return true
-		default:
-			err := chromedp.Run(ctx,
-				chromedp.Navigate(url),
-				chromedp.WaitVisible("body"),
-			)
+func registerCrawler(name string, impl CrawlerImpl) {
+	instances[name] = impl
+}
 
-			if err != nil {
-				fmt.Println("> CSR website detected. Crawling with CSR strategy")
-				return true
-			}
+type CrawlerDriver = string
 
-			fmt.Println("> SSR website detected. Crawling with SSR strategy")
-			return false
-		}
+const (
+	CollyDriver CrawlerDriver = "colly"
+)
+
+type option struct {
+	driver CrawlerDriver
+}
+
+type CrawlerOption func(o *option)
+
+func UseDriver(driver CrawlerDriver) CrawlerOption {
+	return func(o *option) {
+		o.driver = driver
 	}
 }
 
-func New(ctx context.Context, url string) Crawler {
-	if isCSR(url) {
-		return &csrCrawler{ctx, url}
+func New(url string, options ...CrawlerOption) Crawler {
+	return NewWithContext(context.Background(), url, options...)
+}
+
+func NewWithContext(ctx context.Context, url string, options ...CrawlerOption) Crawler {
+	defaultOption := &option{
+		driver: CollyDriver,
 	}
 
-	return &ssrCrawler{ctx, url}
+	for _, option := range options {
+		option(defaultOption)
+	}
+
+	crawler := instances[defaultOption.driver]
+	return crawler(ctx, url)
 }
