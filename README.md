@@ -16,6 +16,5 @@ go run .
 > go run .
 > Input url: https://thoriqadillah.github.io/cat-n-code/
 > Crawling https://thoriqadillah.github.io/cat-n-code/. This might take a while...
-> SSR website detected. Crawling with SSR strategy
-> Crawling finished. Result written on ./out/ssr-1706544013.html
+> Crawling finished. Result written on ./out/thoriqadillah.github.io.html
 ```
